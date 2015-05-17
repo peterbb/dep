@@ -37,16 +37,21 @@ let read_command file =
 let infer delta pe =
     let dom = String_map.dom delta in
     let e = Concrete.to_term dom pe in
-    Infer.infer delta [] e
+    (e, Infer.infer delta [] e)
 
-let check delta pe pt =
+let infer_universe delta pe =
     let dom = String_map.dom delta in
-    let t = Concrete.to_term dom pt in
     let e = Concrete.to_term dom pe in
-    let _ = Infer.infer_universe delta [] t in
-    let t' = Infer.infer delta [] e in
-    Eval.equal delta t t';
-    (e, t)
+    (e, Infer.infer_universe delta [] e)
+
+let check delta pe = function
+    | Some pt ->
+        let (e, t) = infer delta pe in
+        let (t', _) = infer_universe delta pt in
+        Eval.equal delta t t';
+        (e, t)
+    | None ->
+        infer delta pe
     
 let rec toplevel file delta = let open Concrete in
     match read_command file with
@@ -73,17 +78,14 @@ let main = function
         Printf.printf "-- Interpreter started (%s). Loading %s.\n"
              progname filepath;
         let file = open_file filepath in
-        begin try toplevel file String_map.empty with
-        | Eval.Not_equal (e0, e1) -> 
-            Printf.printf "type checking failed, expected %s and %s \
-                           to be equal.\n"
-                (Term.raw_string e0) (Term.raw_string e1);
-            exit (-1)
-        end;
+        let _ = toplevel file String_map.empty in
         close_file file;
         Printf.printf "-- Bye\n"
     | _ ->
         Printf.printf "usage: %s filename\n" Sys.executable_name
 
-let () = main Sys.argv
+let () = 
+    try main Sys.argv with
+    | Infer.Error msg ->
+        Printf.printf "Type error: \n%s\n" msg
 

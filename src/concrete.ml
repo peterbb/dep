@@ -11,8 +11,8 @@ type t =
 type command =
     | Done
     | Load of string
-    | Eval of t * t
-    | Define of string * t * t
+    | Eval of t * t option
+    | Define of string * t option * t
 
 let rec free = function
     | Star -> String_set.empty

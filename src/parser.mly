@@ -12,9 +12,13 @@ command:
     | LOAD; x = ID; DOT
         { Load x }
     | EVAL; e0 = expr0; COLON; e1 = expr0; DOT
-        { Eval (e0, e1) }
+        { Eval (e0, Some e1) }
+    | EVAL; e0 = expr0; DOT
+        { Eval (e0, None) }
     | x = ID; COLON; t = expr0; COLONEQUAL; e = expr0; DOT
-        { Define (x, t, e) }
+        { Define (x, Some t, e) }
+    | x = ID; COLONEQUAL; e = expr0; DOT
+        { Define (x, None, e) }
     | EOF 
         { Done }
 

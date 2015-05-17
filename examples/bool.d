@@ -1,19 +1,20 @@
 bool : * := (A : *) -> A -> A -> A.
 
-true : bool := \A x y. x.
+true : bool := \(A : *) (x y : A). x.
 
-false : bool := \A x y. y.
+false : bool := \(A : *) (x y : A). y.
 
-if : (A : *) -> bool -> A -> A -> A := \A b. b A.
+if : (A : *) -> bool -> A -> A -> A := \(A : *) (b : bool). b A.
 
-b_neg : bool -> bool := \b. if bool b false true.
+b_neg := \(b : bool).
+    if bool b false true.
 
-b_and : bool -> bool -> bool :=
-    \a b. if bool a b false.
+b_and := \(a b : bool).
+    if bool a b false.
 
-b_or : bool -> bool -> bool :=
-    \a b. if bool a true b.
+b_or :=
+    \(a b : bool). if bool a true b.
 
-b_imp : bool -> bool -> bool :=
-    \a b. if bool a b true.
+b_imp :=
+    \(a b : bool). if bool a b true.
 
