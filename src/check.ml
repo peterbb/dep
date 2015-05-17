@@ -30,7 +30,7 @@ let rec check delta gamma tm ty =
         let t = Term.up_by (ix + 1) (List.nth gamma ix) in
         check_app delta gamma ns t ty
     | Const (c, ns) ->
-        let (_, ty0) = StringMap.find c delta in
+        let (_, ty0) = String_map.find c delta in
         check_app delta gamma ns ty0 ty
     | Lam (_, e) ->
         begin match Eval.whnf delta ty with

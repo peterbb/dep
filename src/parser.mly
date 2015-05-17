@@ -42,7 +42,7 @@ expr1:
     | BANG; xs = nonempty_list(ID); COLON; e0 = expr0; DOT; e1 = expr1
         { let pi x e = Pi (x, e0, e) in
           let fv = free e0 in
-          let shadows x = StringSet.mem x fv in
+          let shadows x = String_set.mem x fv in
           if List.exists shadows xs
           then failwith "simultaneous binders in pi type does not support \
                          shadowing variable in its type"

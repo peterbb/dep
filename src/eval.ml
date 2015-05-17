@@ -9,7 +9,7 @@ let rec whnf delta tm = match tm with
     | Pi (_, _, _) -> 
         tm
     | Const (c, es) ->
-        let (e, _) = StringMap.find c delta in
+        let (e, _) = String_map.find c delta in
         Redex (e, es) |> whnf delta
     | Redex (x, []) -> 
         whnf delta x

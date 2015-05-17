@@ -14,16 +14,16 @@ type command =
     | Eval of t * t
     | Define of string * t * t
 
-let union_list xs = List.fold_left StringSet.union StringSet.empty xs
+let union_list xs = List.fold_left String_set.union String_set.empty xs
 
 let rec free = function
-    | Star -> StringSet.empty
-    | Var x -> StringSet.singleton x
-    | App (x, es) -> StringSet.union (free x) (list_free es)
-    | Lam (x, e) -> StringSet.remove x (free e)
+    | Star -> String_set.empty
+    | Var x -> String_set.singleton x
+    | App (x, es) -> String_set.union (free x) (list_free es)
+    | Lam (x, e) -> String_set.remove x (free e)
     | Pi (x, e0, e1) ->
-        StringSet.union (free e0) (StringSet.remove x (free e1))
-    | Arrow (e0, e1) -> StringSet.union (free e0) (free e1)
+        String_set.union (free e0) (String_set.remove x (free e1))
+    | Arrow (e0, e1) -> String_set.union (free e0) (free e1)
 and list_free xs = union_list (List.map free xs)
 
 let index x ys =
@@ -38,7 +38,7 @@ let to_term delta =
     | Var x -> begin match index (Some x) gamma with
         | i -> Term.Var (x, i, [])
         | exception Not_found -> 
-            if StringSet.mem x delta
+            if String_set.mem x delta
             then Term.Const (x, [])
             else failwith ("free variable " ^ x)
         end

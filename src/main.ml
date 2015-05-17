@@ -36,7 +36,7 @@ let read_command file =
         exit (-1)
 
 let check delta pe pt =
-    let dom = StringMap.dom delta in
+    let dom = String_map.dom delta in
     let t = Concrete.to_term dom pt in
     let e = Concrete.to_term dom pe in
     begin try Check.check delta [] t Term.Box with
@@ -49,10 +49,10 @@ let rec toplevel file delta = let open Concrete in
     match read_command file with
     | Done -> delta
     | Define (x, pt, pe) ->
-        (if StringMap.mem x delta then
+        (if String_map.mem x delta then
             "redefining constant " ^ x |> failwith);
         let e, t = check delta pe pt in
-        toplevel file (StringMap.add x (e, t) delta)
+        toplevel file (String_map.add x (e, t) delta)
     | Eval (pe, pt) ->
         let e, t = check delta pe pt in
         Printf.printf "eval %s : %s ===>\t%s\n"
@@ -70,7 +70,7 @@ let main = function
         Printf.printf "-- Interpreter started (%s). Loading %s.\n"
              progname filepath;
         let file = open_file filepath in
-        let _ = toplevel file StringMap.empty in
+        let _ = toplevel file String_map.empty in
         close_file file;
         Printf.printf "-- Bye\n"
     | _ ->
