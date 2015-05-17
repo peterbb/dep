@@ -19,9 +19,8 @@ command:
         { Done }
 
 expr0:
-    | BACKSLASH; xs = nonempty_list(ID); DOT; e = expr0
-        { let lam x e = Lam (x, e) in
-          List.fold_right lam xs e }
+    | BACKSLASH; bs = nonempty_list(binder); DOT; e = expr0
+        { iterated_multi_lam bs e }
     | e = expr1
         { e }
 
@@ -31,7 +30,7 @@ expr1:
     | LPAR; x = ID; COLON; a0 = expr0; RPAR; ARROW; a1 = expr1
         { Pi (x, a0, a1) }
     | FORALL; bs = nonempty_list(binder); COMMA; a = expr1
-        { interated_multi_pi bs a }
+        { iterated_multi_pi bs a }
     | e = expr2
         { e }
 

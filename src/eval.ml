@@ -5,7 +5,7 @@ let rec whnf delta tm = match tm with
     | Box
     | Star
     | Var (_, _, _) 
-    | Lam (_, _)
+    | Lam (_, _, _)
     | Pi (_, _, _) -> 
         tm
     | Const (c, es) ->
@@ -19,7 +19,7 @@ let rec whnf delta tm = match tm with
         Const (c, ns @ ms) |> whnf delta
     | Redex (Redex (n, ns), ms) ->
         Redex (n, ns @ ms) |> whnf delta
-    | Redex (Lam (x, e), n :: ns) -> 
+    | Redex (Lam (x, _, e), n :: ns) -> 
         Redex (subst 0 n e, ns) |> whnf delta 
     (* tm should be well-typed, so this should not happen *)
     | Redex (Box, _)
@@ -41,8 +41,9 @@ let rec equal delta tm0 tm1 =
         begin try List.iter2 (equal delta) ns ms with
         | Invalid_argument s -> raise (Not_equal (tm0, tm1))
         end
-    | Lam (_, n), Lam (_, m) ->
-        equal delta n m
+    | Lam (_, t0, e0), Lam (_, t1, e1) ->
+        equal delta t0 t1;
+        equal delta e0 e1
     | Pi (_, n0, n1), Pi (_, m0, m1) ->
         equal delta n0 m0;
         equal delta n1 m1
@@ -55,8 +56,8 @@ let rec nf delta tm = match whnf delta tm with
     | Star -> Star
     | Var (x, ix, es) ->
         Var (x, ix, List.map (nf delta) es)
-    | Lam (x, e) ->
-        Lam (x, nf delta e)
+    | Lam (x, e0, e1) ->
+        Lam (x, nf delta e0, nf delta e1)
     | Pi (x, e0, e1) ->
         Pi (x, nf delta e0, nf delta e1)
     

@@ -4,7 +4,7 @@ type t =
     | Star
     | Var   of string * int * t list
     | Const of string * t list
-    | Lam   of string * t
+    | Lam   of string * t * t
     | Pi    of string * t * t
     | Redex of t * t list
 
@@ -17,8 +17,8 @@ let shift diff =
             Var (y, iy + diff, shift_list ix es)
         else
             Var (y, iy, shift_list ix es)
-    | Lam (y, e) ->
-        Lam (y, shift (1 + ix) e)
+    | Lam (y, e0, e1) ->
+        Lam (y, shift ix e0, shift (1 + ix) e1)
     | Pi (y, e0, e1) ->
         Pi (y, shift ix e0, shift (1 + ix) e1)
     | Redex (e, es) ->
@@ -48,8 +48,8 @@ let rec subst ix n m =
         Const (c, subst_list ix n es)
     | Redex (e, es) ->
         Redex (subst ix n e, subst_list ix n es)
-    | Lam (y, e) ->
-        Lam (y, subst (1 + ix) (up n) e)
+    | Lam (y, e0, e1) ->
+        Lam (y, subst ix n e0, subst (1 + ix) (up n) e1)
     | Pi (x, e0, e1) ->
         Pi (x, subst ix n e0, subst (1 + ix) (up n) e1)
 
@@ -63,8 +63,8 @@ let rec raw_string = function
         Printf.sprintf "%s[%d]%s" x ix (raw_string_list es)
     | Const (c, es) ->
         c ^ raw_string_list es
-    | Lam (x, e) ->
-        Printf.sprintf "(\\%s. %s)" x (raw_string e)
+    | Lam (x, e0, e1) ->
+        Printf.sprintf "(\\%s : %s. %s)" x (raw_string e0) (raw_string e1)
     | Pi (x, e0, e1) ->
         Printf.sprintf "(!%s : %s. %s)" x (raw_string e0) (raw_string e1)
     | Redex (e, es) ->

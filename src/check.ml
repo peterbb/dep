@@ -32,9 +32,10 @@ let rec check delta gamma tm ty =
     | Const (c, ns) ->
         let (_, ty0) = String_map.find c delta in
         check_app delta gamma ns ty0 ty
-    | Lam (_, e) ->
+    | Lam (_, t, e) ->
         begin match Eval.whnf delta ty with
         | Pi (_, t0, t1) ->
+            Eval.equal delta t t0;
             check delta (t0::gamma) e t1
         | _ -> type_error "expcted something else, got lambda expressions"
         end
@@ -52,7 +53,7 @@ let rec check delta gamma tm ty =
         check delta gamma (Const (c, ns @ ms)) ty
     | Redex (Redex (n, ns), ms) ->
         check delta gamma (Redex (n, ns @ ms)) ty
-    | Redex (Lam (_, _), _) ->
+    | Redex (Lam (_, _,_), _) ->
         failwith "no type inference, can't check terms \
                   on the for (\\x.M)N"
     | Redex (Pi (_, _, _), _::_)
@@ -79,4 +80,5 @@ and check_app delta gamma tms ty0 ty1 = match tms with
 
 and check_type_or_kind delta gamma tm =
     try check delta gamma tm Star with
+    | Eval.Not_equal (_, _) 
     | Error _ -> check delta gamma tm Box

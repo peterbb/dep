@@ -68,7 +68,13 @@ let main = function
         Printf.printf "-- Interpreter started (%s). Loading %s.\n"
              progname filepath;
         let file = open_file filepath in
-        let _ = toplevel file String_map.empty in
+        begin try toplevel file String_map.empty with
+        | Eval.Not_equal (e0, e1) -> 
+            Printf.printf "type checking failed, expected %s and %s \
+                           to be equal.\n"
+                (Term.raw_string e0) (Term.raw_string e1);
+            exit (-1)
+        end;
         close_file file;
         Printf.printf "-- Bye\n"
     | _ ->

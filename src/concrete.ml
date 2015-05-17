@@ -4,7 +4,7 @@ type t =
     | Star
     | Var   of string
     | App   of t * t list
-    | Lam   of string * t
+    | Lam   of string * t * t
     | Pi    of string * t * t
     | Arrow of t * t
 
@@ -18,7 +18,8 @@ let rec free = function
     | Star -> String_set.empty
     | Var x -> String_set.singleton x
     | App (x, es) -> String_set.union (free x) (list_free es)
-    | Lam (x, e) -> String_set.remove x (free e)
+    | Lam (x, e0, e1) ->
+        String_set.union (free e0) (String_set.remove x (free e1))
     | Pi (x, e0, e1) ->
         String_set.union (free e0) (String_set.remove x (free e1))
     | Arrow (e0, e1) -> String_set.union (free e0) (free e1)
@@ -33,8 +34,19 @@ let multi_pi xs a b =
     then failwith "binder in pi type shadows itself"
     else List.fold_right pi xs b
 
-let interated_multi_pi binders b = 
+let multi_lam xs a b =
+    let lam x b' = Lam (x, a, b') in
+    let fv = free a in
+    let shadows x = String_set.mem x fv in
+    if List.exists shadows xs
+    then failwith "binder in lam type shadows itself"
+    else List.fold_right lam xs b
+
+let iterated_multi_pi binders b = 
     List.fold_right (fun (xs, a) b -> multi_pi xs a b) binders b
+
+let iterated_multi_lam binders b =
+    List.fold_right (fun (xs, a) b -> multi_lam xs a b) binders b
 
 
 (* Translate into core syntax. *)
@@ -56,8 +68,8 @@ let to_term delta =
         end
     | App (e, es) ->
         Term.Redex (to_term gamma e, List.map (to_term gamma) es)
-    | Lam (x, e) ->
-        Term.Lam (x, to_term (Some x::gamma) e)
+    | Lam (x, e0, e1) ->
+        Term.Lam (x, to_term gamma e0, to_term (Some x::gamma) e1)
     | Pi (x, e0, e1) ->
         Term.Pi (x, to_term gamma e0, to_term (Some x::gamma) e1)
     | Arrow (e0, e1) ->
