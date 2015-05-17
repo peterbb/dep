@@ -55,6 +55,8 @@ let rec subst ix n m =
 
 and subst_list ix n ms = List.map (subst ix n) ms
 
+let nth gamma ix = 
+    up_by (ix + 1) (List.nth gamma ix)
 
 let rec raw_string = function
     | Box -> "#"

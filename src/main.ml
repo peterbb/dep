@@ -1,6 +1,5 @@
 
 
-
 type file = { 
     in_channel : in_channel;
     lexbuf : Lexing.lexbuf
@@ -35,12 +34,18 @@ let read_command file =
            p.pos_fname p.pos_lnum (Lexing.lexeme file.lexbuf);
         exit (-1)
 
+let infer delta pe =
+    let dom = String_map.dom delta in
+    let e = Concrete.to_term dom pe in
+    Infer.infer delta [] e
+
 let check delta pe pt =
     let dom = String_map.dom delta in
     let t = Concrete.to_term dom pt in
     let e = Concrete.to_term dom pe in
-    Check.check_type_or_kind delta [] t;
-    Check.check delta [] e t;
+    let _ = Infer.infer_universe delta [] t in
+    let t' = Infer.infer delta [] e in
+    Eval.equal delta t t';
     (e, t)
     
 let rec toplevel file delta = let open Concrete in
