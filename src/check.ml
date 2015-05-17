@@ -44,9 +44,7 @@ let rec check delta gamma tm ty =
         begin if (ty' <> Box && ty' <> Star) then
             type_error "expected something else, not pi expression"
         end;
-        begin try check delta gamma t0 Star with
-        | Error _ -> check delta gamma t0 Box
-        end;
+        check_type_or_kind delta gamma t0;
         check delta (t0::gamma) t1 ty'
     | Redex (Var (x, ix, ns), ms) ->
         check delta gamma (Var (x, ix, ns @ ms)) ty
@@ -78,3 +76,7 @@ and check_app delta gamma tms ty0 ty1 = match tms with
             check_app delta gamma tms (subst 0 t ty01) ty1
         | _ -> failwith "expected pi type"
         end
+
+and check_type_or_kind delta gamma tm =
+    try check delta gamma tm Star with
+    | Error _ -> check delta gamma tm Box

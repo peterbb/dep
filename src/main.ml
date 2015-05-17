@@ -39,9 +39,7 @@ let check delta pe pt =
     let dom = String_map.dom delta in
     let t = Concrete.to_term dom pt in
     let e = Concrete.to_term dom pe in
-    begin try Check.check delta [] t Term.Box with
-    | Check.Error _ -> Check.check delta [] t Term.Star
-    end;
+    Check.check_type_or_kind delta [] t;
     Check.check delta [] e t;
     (e, t)
     
