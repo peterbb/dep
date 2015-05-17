@@ -20,9 +20,10 @@ rule read = parse
     | ":"       { COLON }
     | ":="      { COLONEQUAL }
     | "."       { DOT }
+    | ","       { COMMA }
     | "*"       { STAR }
     | "->"      { ARROW }
-    | "!"       { BANG }
+    | "forall"       { FORALL }
     | "eval"    { EVAL }
     | "load"    { LOAD }
     | "--"      { skip_line lexbuf }

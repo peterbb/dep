@@ -14,8 +14,6 @@ type command =
     | Eval of t * t
     | Define of string * t * t
 
-let union_list xs = List.fold_left String_set.union String_set.empty xs
-
 let rec free = function
     | Star -> String_set.empty
     | Var x -> String_set.singleton x
@@ -24,8 +22,22 @@ let rec free = function
     | Pi (x, e0, e1) ->
         String_set.union (free e0) (String_set.remove x (free e1))
     | Arrow (e0, e1) -> String_set.union (free e0) (free e1)
-and list_free xs = union_list (List.map free xs)
+and list_free xs = String_set.union_list (List.map free xs)
 
+(* Translate "(x0 ... xn : a) b" into "(x0 : a) ... (xn : a) b". *)
+let multi_pi xs a b =
+    let pi x b' = Pi (x, a, b') in
+    let fv = free a in
+    let shadows x = String_set.mem x fv in
+    if List.exists shadows xs
+    then failwith "binder in pi type shadows itself"
+    else List.fold_right pi xs b
+
+let interated_multi_pi binders b = 
+    List.fold_right (fun (xs, a) b -> multi_pi xs a b) binders b
+
+
+(* Translate into core syntax. *)
 let index x ys =
     let rec loop i = function
         | [] -> raise Not_found
@@ -52,4 +64,3 @@ let to_term delta =
         Term.Pi ("_", to_term gamma e0, to_term (None::gamma) e1)
     in to_term []
     
-

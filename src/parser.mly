@@ -1,8 +1,7 @@
 %token <string> ID
 %token EOF
-%token EVAL LOAD
-%token LPAR RPAR COLON BACKSLASH COLONEQUAL DOT STAR ARROW
-%token BANG
+%token EVAL LOAD FORALL
+%token LPAR RPAR COLON BACKSLASH COLONEQUAL DOT COMMA STAR ARROW
 
 %{ open Concrete %}
 
@@ -19,16 +18,6 @@ command:
     | EOF 
         { Done }
 
-(*
-  Ambigous grammar of expressions:
-    e ::= id list(e) | * | \ list(id). e | (id : e) e | e -> e | (e)
-  Unambiguated grammar:
-    e0 ::= \ list(id) . e0 | e0
-    e1 ::= e2 | e2 -> e1 | (list(id) : e1) e1
-    e2 ::= e3 list(e3)
-    e3 ::= id | * | ( e0 )
-*)
-
 expr0:
     | BACKSLASH; xs = nonempty_list(ID); DOT; e = expr0
         { let lam x e = Lam (x, e) in
@@ -39,14 +28,10 @@ expr0:
 expr1:
     | e0 = expr2; ARROW; e1 = expr1
         { Arrow (e0, e1) }
-    | BANG; xs = nonempty_list(ID); COLON; e0 = expr0; DOT; e1 = expr1
-        { let pi x e = Pi (x, e0, e) in
-          let fv = free e0 in
-          let shadows x = String_set.mem x fv in
-          if List.exists shadows xs
-          then failwith "simultaneous binders in pi type does not support \
-                         shadowing variable in its type"
-          else List.fold_right pi xs e1 }
+    | LPAR; x = ID; COLON; a0 = expr0; RPAR; ARROW; a1 = expr1
+        { Pi (x, a0, a1) }
+    | FORALL; bs = nonempty_list(binder); COMMA; a = expr1
+        { interated_multi_pi bs a }
     | e = expr2
         { e }
 
@@ -61,4 +46,8 @@ expr3:
         { Star }
     | LPAR; e = expr0; RPAR
         { e }
+
+binder :
+    | LPAR; x = nonempty_list(ID); COLON; a = expr0; RPAR
+        { (x, a) }
 
