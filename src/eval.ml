@@ -9,8 +9,10 @@ let rec whnf delta tm = match tm with
     | Pi (_, _, _) -> 
         tm
     | Const (c, es) ->
-        let (e, _) = String_map.find c delta in
-        Redex (e, es) |> whnf delta
+        begin match String_map.find c delta with
+        | Some e, _ -> Redex (e, es) |> whnf delta
+        | None, _ -> Const (c, es)
+        end
     | Redex (x, []) -> 
         whnf delta x
     | Redex (Var (x, ix, ns), ms) ->
@@ -38,9 +40,12 @@ let rec equal delta tm0 tm1 =
         begin if (ix <> iy) then
             raise (Not_equal (tm0, tm1))
         end;
-        begin try List.iter2 (equal delta) ns ms with
-        | Invalid_argument s -> raise (Not_equal (tm0, tm1))
-        end
+        equal_list delta tm0 tm1 ns ms
+    | Const (c0, ns), Const (c1, ms) ->
+        begin if (c0 <> c1) then
+            raise (Not_equal (tm0, tm1))
+        end;
+        equal_list delta tm0 tm1 ns ms
     | Lam (_, t0, e0), Lam (_, t1, e1) ->
         equal delta t0 t1;
         equal delta e0 e1
@@ -49,6 +54,9 @@ let rec equal delta tm0 tm1 =
         equal delta n1 m1
     | tm0, tm1 ->
         raise (Not_equal (tm0, tm1))
+and equal_list delta tm0 tm1 ns ms =
+    try List.iter2 (equal delta) ns ms with
+    | Invalid_argument _ -> raise (Not_equal (tm0, tm1))
 
 (* For now, repeated application of whnf *)
 let rec nf delta tm = match whnf delta tm with
@@ -56,8 +64,9 @@ let rec nf delta tm = match whnf delta tm with
     | Star -> Star
     | Var (x, ix, es) ->
         Var (x, ix, List.map (nf delta) es)
+    | Const (c, es) ->
+        Const (c, List.map (nf delta) es)
     | Lam (x, e0, e1) ->
         Lam (x, nf delta e0, nf delta e1)
     | Pi (x, e0, e1) ->
         Pi (x, nf delta e0, nf delta e1)
-    

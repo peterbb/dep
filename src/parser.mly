@@ -19,6 +19,8 @@ command:
         { Define (x, Some t, e) }
     | x = ID; COLONEQUAL; e = expr0; DOT
         { Define (x, None, e) }
+    | x = ID; COLON; t = expr0; DOT
+        { Constant (x, t) }
     | EOF 
         { Done }
 

@@ -13,6 +13,7 @@ type command =
     | Load of string
     | Eval of t * t option
     | Define of string * t option * t
+    | Constant of string * t
 
 let rec free = function
     | Star -> String_set.empty

@@ -60,7 +60,12 @@ let rec toplevel file delta = let open Concrete in
         (if String_map.mem x delta then
             "redefining constant " ^ x |> failwith);
         let e, t = check delta pe pt in
-        toplevel file (String_map.add x (e, t) delta)
+        toplevel file (String_map.add x (Some e, t) delta)
+    | Constant (x, pt) ->
+        (if String_map.mem x delta then
+            "redefining constant " ^ x |> failwith);
+        let t, _ = infer_universe delta pt in
+        toplevel file (String_map.add x (None, t) delta)
     | Eval (pe, pt) ->
         let e, t = check delta pe pt in
         Printf.printf "eval %s : %s ===>\t%s\n"
