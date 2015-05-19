@@ -25,6 +25,8 @@ command:
         { Done }
 
 expr0:
+    | BACKSLASH; x = ID; COLON; a = expr0; DOT; e = expr0
+        { Lam (x, a, e) }
     | BACKSLASH; bs = nonempty_list(binder); DOT; e = expr0
         { iterated_multi_lam bs e }
     | e = expr1
